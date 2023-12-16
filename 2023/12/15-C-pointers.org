@@ -1,6 +1,7 @@
 #+TITLE: Using Pointers in C
 #+DATE: 2023-12-15 Fri 19:52:00
-#+LAST_MODIFIED: 2023-12-15 Fri 22:36:24
+#+CATEGORIES[]: C Programming
+#+LAST_MODIFIED: 2023-12-16 Sat 15:02:50
 
 * Pointers in C
 
