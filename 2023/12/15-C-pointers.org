@@ -1,0 +1,702 @@
+#+TITLE: Using Pointers in C
+#+DATE: 2023-12-15 Fri 19:52:00
+#+LAST_MODIFIED: 2023-12-15 Fri 21:54:30
+
+* Pointers in C
+
+Pointers is one of the most confusing functionalities of the C programming
+language, but it is the one that make it incredibly powerful. So here's a little
+entry aiming to help those struggling to understand pointers so well, I'll try
+to make it as simple and thorough as possible so you get comfortable using them.
+
+** How Memory Works
+
+Before we start writing some code, or go ahead and start defining and trying to
+understand pointers, let's first take a look at how memory works, so it gets
+easier to understand later on.
+
+As we already know, in C we can declare variables of certain types, we can
+declare ~ints~, ~floats~, ~chars~, etc. Each of those data types take a certain amount
+of memory to store its value, it depends a lot on the operating system, the
+architecture of the processor, but usually an int is 4 bytes, a char is 1 byte
+and so on.
+
+When we declare a variable, like:
+
+#+begin_src C
+  int num = 15;
+  char car = 'A';
+#+end_src
+
+We are essentially assigning names to certain spaces in memory. This is how - a
+very fictitious and low-detail - memory looks with those two variables:
+
+#+begin_src artist
+  +-------+---------+
+  | Name  | Address |
+  +-------+---------+ 
+  | num   | 0x00    |
+  +-------+---------+
+  | car   | 0x04    |
+  +-------+---------+
+#+end_src
+
+We can think of variables as house addresses. A variable again, is just a name
+for an address, because it's much easier to do ~num = 4~ than to access memory
+directly and memorise each address and doing ~0x00 = 4~.
+
+As memory is sequential, if we define an array for example, each of its elements
+will be stored in an address that will increment in the amount of bytes that its
+datatype occupies for each element, let's suppose we have this array:
+
+#+begin_src C
+  int arr[3] = { 0 };
+#+end_src
+
+It would be stored in memory like:
+
+#+begin_src artist
+  +-------+---------+
+  |Name   | Address |
+  +-------+---------+
+  |arr[0] | 0x05    |
+  +-----------------+
+  |arr[1] | 0x09    |
+  +-----------------+
+  |arr[2] | 0x0d    |
+  +-------+---------+
+#+end_src
+
+So to recap, a variable is just a name that we assign to certain space in memory
+that has enough space to store a value.
+
+** Pointers
+
+C allows us to indirectly[fn:1] access the value of certain data item using the
+memory address where it is located.
+
+When defining a pointer, we must initialise it to the datatype of the space in
+memory that we will access to, so we can have pointers to integers, characters
+and all the data types in the C programming language. This is the syntax to
+create a pointers:
+
+#+begin_src C
+  int number = 99;
+  int *pnumber = &number;
+#+end_src
+
+This syntax introduces two new operators the dereference/pointer operator *** and
+the address of operator *&*. The dereference operator allows us to both define a
+pointer and to dereference[fn:2] it (more on this later.) And the address of
+operator allows us to get the access of any variable that we have in our
+program.
+
+In the previous snippet of code, we are defining two variables: ~number~ which is
+an integer, and ~pnumber~ which is a pointer to an int, and in this case it's
+pointing to ~number~ (we say that it is /pointing/ when it is holding the address
+of a variable.)
+
+So in memory it would look like this:
+
+#+begin_src artist
+    +-----------+---------------+---------+
+    | Name      | Address       | Value   |
+    +-----------+---------------+---------+
+    | number    | 0x11          | 99      |
+    +-----------+---------------+---------+
+    | pnumber   | 0x15          | 0x11    |
+    +-----------+---------------+---------+
+#+end_src
+
+The value of the variable ~number~ is 99 and the value of ~pnumber~ is the address
+of ~number~ which in this case is 0x11. Notice that as all the variables, the
+compiler will allocate memory for a pointer, so ~pnumber~ would be 8 (again, this
+depends on the processor and the operating system.)
+
+Why would we use pointers? Why do we need to access the memory location of a
+variable? Here are some reasons:
+- Accessing data with only variables is limiting.
+- We can access any location in memory using pointers (this is a double edged
+  sword, as it can be extremely useful and dangerous)
+- We can perform pointer arithmetic[fn:3] (more on this later)
+- We can use arrays and strings using pointers
+- We can modify variables passed to functions as we can simulate pass by
+  reference[fn:4]
+- We can allocate and free memory dynamically
+
+**  Using Pointers
+
+As mentioned before, to create a pointer we use the *** dereference operator and
+to set its value to the address of a variable, we use the *&* address of operator.
+
+As with any variable that we declare in C, if we do not initialise it to have
+certain specific value it will contain garbage. Why is that? Because again, as
+we declare a variable we are assigning a free space in memory to it so it can
+have a value. However, it will assign any *free* space in memory that it can find,
+in that exact same address there might be a value of a variable that was before
+in that same address, and that is not needed anymore, so the space was marked as
+*free*. To avoid this issue we should *ALWAYS* declare variables with a value, and
+to do that with pointers we can either assign *0* or *NULL* to them.
+
+For the following examples we will be using the variables ~number~ and ~pnumber~
+that were created in previous snippets of code.
+
+We know that the variable ~pnumber~ points to ~number~ whose value is 99. But the
+value of ~pnumber~ is not 99 but the address of ~number~. Even if this is the case,
+we can access and modify the value that ~pnumber~ points to, in this case 99. To
+do that we use the dereference operator. For example, if we do:
+
+#+begin_src C
+  *pnumber += 29;
+  int number2 = *pnumber;
+#+end_src
+
+And as it was said in the beginning, in that snippet of code, we are
+/indirectly/[fn:1] changing the value of ~number~ using ~pnumber~, in this case we are
+adding 29 so the value of ~number~ is now 128. And we created a new variable
+called ~number2~ and we assigned to it the value that ~pnumber~ is pointing to, so
+the value of ~number2~ is 128.
+
+Let's do now a complete program where we can see this:
+
+#+begin_src C :results output
+  #include <stdio.h>
+
+  int
+  main (void)
+  {
+    int count = 0;
+    int *pcount = &count;
+    int count2 = 0;
+
+    printf ("The value of count is: %d\n", count);
+    *pcount += 10;
+    count2 = *pcount;
+
+    printf ("count = count2 = %d, pcount = %p, *pcount = %d\n", count2, pcount,
+            ,*pcount);
+
+    return 0;
+  }
+#+end_src
+
+And the output of that program would be:
+
+#+begin_src text
+  The value of count is: 0
+  count = count2 = 10, pcount = 0x7ffca2352f18, *pcount = 10
+#+end_src
+
+As you can see the value of ~count~ was 0, we indirectly[fn:1] incremented 10 to
+it, then we set the value of ~count2~ the value that ~pcount~ was pointing to, and
+finally, we printed all the values.
+
+Be very careful, that we should never, *NEVER* dereference or try to do any
+operation with an uninitialised pointer, one of the reasons is because of the
+garbage values that it might have for the reasons explained before, and because
+it can lead to some /undefined behaviours/ such as a /segmentation fault/.
+
+As we initialise pointers to ~NULL~ we can also check if a pointer has a value
+different than null before we perform an operation on it:
+
+#+begin_src C
+  if (pcount)
+    *pcount += 10;
+#+end_src
+
+Notice that we can treat ~NULL~ as a boolean as it is 0, and if any number is
+greater than 0 it will be considered true. So that's why we can do both
+~if (pcount)~ and ~if (!pcount)~.
+
+** Constant Pointers
+
+Something tricky about pointers is when we start using the ~const~ keyword to
+specify what and what not we can modify of a pointer. There are two types of
+constant pointers:
+- A constant pointer.
+- A pointer to a constant.
+
+*** Constant Pointer
+
+A constant pointer, is a type of pointer whose value cannot be changed, that is,
+we cannot change the address that it is pointing to. The difference between the
+declarations of a /constant pointer/ and a /pointer of a constant/ is the position
+of the ~const~ keyword.
+
+Let's look at an example of a /constant pointer/:
+
+#+begin_src C
+  int number = 100;
+  int *const pnumber = &number;
+
+  *pnumber = 200;                 /* this is valid */
+  pnumber = NULL;                 /* this is invalid */
+#+end_src
+
+Notice that as this is a *constant pointer* we can change the value that it is
+pointing to, as ~number~ is not a constant, however, as our pointer is a constant
+we *CANNOT* change the address that it is pointing to, that is, we cannot change
+the value of a /constant pointer/.
+
+*** Pointer to a Constant
+
+This is the opposite of a constant pointer, in this type of pointer we can
+change its value, but we cannot change the value that it is pointing to. As
+mentioned before, this might be a little tricky because of the position of the
+~const~ keyword, to declare a constant pointer we need to put the ~const~ keyword
+after the dereference operator (***) and to declare a pointer to a constant we
+need to put the ~const~ keyword before the datatype:
+
+#+begin_src C
+  int number = 20;
+  const int *pnumber = &number;
+
+  *pnumber += 20;                 /* this is invalid */
+  pnumber = NULL;                 /* this is valid */
+#+end_src
+
+In a pointer to a constant, we cannot change the value that it is pointing to
+even *if the variable that it points to is not a constant*.
+
+As a little summary:
+- If the ~const~ keyword if after the dereference operator, it means that it is a
+  /constant pointer/.
+- If the ~const~ keyword is before the datatype of the pointer, it means that it
+  is a /pointer to a constant/.
+
+Notice that we can mix both types and create a /constant pointer pointing to a/
+/constant/: ~const int *const pnumber = &number;~ in that pointer, we cannot change
+neither its value, nor the value that it is pointing to.
+
+*** Void Pointer
+
+As we know, to declare pointer we need to specify the type of the data that it
+is pointing to, however, we can define a pointer to be of type ~void~ so we can
+point to any type of data with it. But it is very important to know that before
+we can either access or modify the value it points to, we need to cast it:
+
+#+begin_src C
+  int number = 200;
+  void *ptr = &number;
+
+  *(int *)ptr += 20;
+#+end_src
+
+Notice that we need to first cast ~ptr~ to be an ~int *~ before we dereference it.
+This is specially useful when we start working with pointers as arguments to
+functions to accept multiple type of variables. That combined with ~structs~ (as
+its elements are stored consecutively) can be very powerful as we can have a
+general ~struct~ that can tell us more about the variable passed so we can
+properly cast it.
+
+** Arrays
+
+Arrays are very closely related to pointers, actually, under the hood, an array
+is a pointer.
+
+We can also have pointers to array, but these work a little differently. As an
+array is already a pointer, when we define a pointer to an array, we don't need
+to use the address of operator (*&*), for example:
+
+#+begin_src C
+  int values [100] = { 0 };
+  int *pvalues = values;
+#+end_src
+
+In that code, the variable ~pvalues~ will point to the first element of the ~values~
+array, so it doesn't point to the entire array. Knowing this can be incredibly
+useful when we start doing pointer arithmetic[fn:3] (more on this later).
+
+If we want a pointer to point to certain element of an array, we would access it
+with its index and use the address of, like this:
+
+#+begin_src C
+  int *pvalue = &values[2];
+#+end_src
+
+So ~pvalue~ points to the third element of the ~values~ array.
+
+** Pass By Reference vs Pass By Value
+
+Let's take a look at how C works with functions.
+
+There are two ways of passing arguments to a function: *pass by value* and *pass by*
+*reference*[fn:4]. By default, every time that we pass a variable to a function,
+we are passing its value, rather than the variable itself, so all the arguments
+will work as local variables and any changes we make to them won't be reflected
+outside the function. Let's take a look at it with the following example:
+
+#+begin_src C :results output
+  #include <stdio.h>
+
+  void
+  swap (int a, int b)
+  {
+    int temp = a;
+    a = b;
+    b = temp;
+  }
+
+  int
+  main (void)
+  {
+    int a = 10, b = 20;
+    printf ("Values of a and b before swapping, a = %d, b = %d\n", a, b);
+
+    swap (a, b);
+    printf ("Values of a and b after swapping, a = %d, b = %d\n", a, b);
+
+    return 0;
+  }
+#+end_src
+
+The output of that program would be:
+
+#+begin_src text
+  Values of a and b before swapping, a = 10, b = 20
+  Values of a and b after swapping, a = 10, b = 20
+#+end_src
+
+As you can see, neither value changed even after calling the swap function. That
+happens because when we pass variables as arguments to a function we are, again,
+passing its value and not the variable itself. So that function call is the same
+as doing ~swap (10, 20)~, we are swapping its values, yes, but we are not storing
+their new values anywhere.
+
+Even if this happens, we can /simulate/ a *pass by reference* in C using pointers,
+because even if it /always/ passes only the value of it, if we pass an address as
+a value, we are indirectly sending a reference to the value, as we can modify
+that space in memory. This is how the same program would be using pointers now:
+
+#+begin_src C :results output
+  #include <stdio.h>
+
+  void
+  swap (int *a, int *b)
+  {
+    int temp = *a;
+    *a = *b;
+    *b = temp;
+  }
+
+  int
+  main (void)
+  {
+    int a = 10, b = 20;
+    printf ("Values of a and b before swapping, a = %d, b = %d\n", a, b);
+
+    swap (&a, &b);
+    printf ("Values of a and b after swapping, a = %d, b = %d\n", a, b);
+
+    return 0;
+  }
+#+end_src
+
+Now the output of that program is this:
+
+#+begin_src text
+  Values of a and b before swapping, a = 10, b = 20
+  Values of a and b after swapping, a = 20, b = 10
+#+end_src
+
+So remember, whenever you want to change the value of a variable inside of a
+function and you want it to be reflected outside of it, you will need to pass
+pointers as arguments to simulate *pass by reference*[fn:4].
+
+Notice that we can also declare functions to return pointers, by using the
+dereference operator (***) when defining its type, this would be a function that
+returns a ~void *~ for example:
+
+#+begin_src C
+  void *
+  my_function (void)
+  {
+    /* contents of the function go here */
+  
+    return NULL;
+  }
+#+end_src
+
+We can do this if we need to return multiple elements from a function, however,
+this introduces a new risk as you might return a pointer that is located in the
+stack[fn:5] instead of the heap[fn:6].
+
+** Pointer Arithmetic
+
+As I've been mentioning throughout this post there is something called /Pointer/
+/Arithmetic/ that allows us to perform basic arithmetic operation (addition and
+subtraction) to pointer variables.
+
+Why would we want to do this? Well, this becomes very useful when using arrays
+and strings. As we know, memory is sequential, which means that all the elements
+of an array are one after the other separated by /x/ bytes of memory (/x/ represents
+the size of the datatype of the elements of the array) as shown in that little
+drawing I made at the beginning of the post.
+
+Taking this into account, we can do addition and subtraction to go through each
+of these sequential items. For example, let's suppose we have these variables:
+
+#+begin_src C
+  int values[] = { 10, 20, 30 };
+  int *pvalues = values;
+#+end_src
+
+We have an array of integers called ~values~ and a pointer called ~pvalues~ that
+points at the first item of ~values~ so, if we dereference ~pvalues~ we would get
+~10~. And as we already know the size of an /int/ is 4 (at least, let's suppose so
+for this example), if we do ~pvalues + 1~ we would be incrementing
+~1 * sizeof (int)~ to the address that ~pvalues~ is pointing to, so if we
+dereference it now we would get 20 as it is now pointing to the second item of
+values.
+
+We can also check if a location in memory is greater than or smaller than
+another using the ~<~ and ~>~ operators. So we could do:
+
+#+begin_src C
+  int values[] = { 10, 20, 30 };
+  int *values_start = values;
+  int *values_end = values + 2;   /* equivalent of values [2] */
+
+  if (values_start < values_end)
+    printf ("The start of the array is first in memory duh.\n");
+#+end_src
+
+And the output of that program would be:
+
+#+begin_src text
+  The start of the array is first in memory duh.
+#+end_src
+
+We can use these two /features/ to implement a function that sums all the elements
+of an array in a much simpler and cleaner way:
+
+#+begin_src C
+  int
+  array_sum (int *arr, int arr_len)
+  {
+    int sum = 0;
+    int *arr_end = arr + arr_len;
+
+    while (arr++ < arr_end)
+      sum += *arr;
+
+    return sum;
+  }
+
+  int
+  main (void)
+  {
+    int arr[] = { 10, 20, 30 };
+    printf ("The sum of arr is: %d\n",
+            array_sum (arr, (sizeof (arr) / sizeof (int)) - 1));
+
+    return 0;
+  }
+#+end_src
+
+And as expected, the output is:
+
+#+BEGIN_SRC text
+The sum of arr is: 50
+#+END_SRC
+
+As we can see in that previous snippet of code, we can calculate the number of
+elements in an array by getting the actual size of it, and divide it by the size
+of its datatype. For example, size of ~arr~ is 12 (considering an ~int~ is 4 bytes),
+and if we divide 12 by 4 (the output of ~sizeof (int)~) we will get 3. But if we
+want to use that value to iterate through the items of an array, we need to
+decrease one because remember that we start counting arrays at 0.
+
+And we can do the same with strings, let's take a look at an example that prints
+out more information:
+
+#+begin_src C :results output
+  char *str = "A string!";
+  char *ptr = str;
+
+  do
+    {
+      printf ("*str = %c, *ptr = %c, ptr = %p\n",
+              *str, *ptr, ptr);
+    }
+   while (*++ptr);
+#+end_src
+
+The output of that program will be:
+
+#+BEGIN_SRC text
+ *str = A, *ptr = A, ptr = 0x55a3a18cd008
+ *str = A, *ptr =  , ptr = 0x55a3a18cd009
+ *str = A, *ptr = s, ptr = 0x55a3a18cd00a
+ *str = A, *ptr = t, ptr = 0x55a3a18cd00b
+ *str = A, *ptr = r, ptr = 0x55a3a18cd00c
+ *str = A, *ptr = i, ptr = 0x55a3a18cd00d
+ *str = A, *ptr = n, ptr = 0x55a3a18cd00e
+ *str = A, *ptr = g, ptr = 0x55a3a18cd00f
+ *str = A, *ptr = !, ptr = 0x55a3a18cd010
+#+END_SRC
+
+It might seem a little confusing, but what we are doing is basically just
+printing values until the dereference of ~ptr~ is equal to the null terminator,
+which means that we have reached the end of the string.
+
+** Dynamic Memory Allocation
+
+As we know from before, when we create a variable the compiler automatically
+allocates the memory necessary for it to hold its value in the stack[fn:5] which
+means that all variables that we create are local to a scope, and when we are
+outside of it, we cannot access its memory location. For example, if we declare
+a variable like ~int a = 10;~ and we try to return ~&a~ from a function, its memory
+might have been rewritten by then, as that memory space will be marked as free
+in the stack.
+
+Dynamic memory allocation becomes extremely useful as we can change the amount
+of memory of a variable at runtime, which means we can create strings and arrays
+that could be shrunk, to add or to remove items that we don't need.
+
+The C programming language provides us several functions to allocate memory, but
+we will look at two: ~malloc~ and ~calloc~ (notice that both these functions are
+defines in the ~stdlib.h~ header so you need to include it before you can use
+them).
+
+To allocate ~n~ amount of bytes in memory, we can call ~malloc (n)~ and it will
+return the address of the start of the memory that is ~n~ bytes long. We can, for
+example, define an array of 10 integers using malloc:
+
+#+begin_src C
+  int *arr = malloc (sizeof (int) * 10);
+  for (int i = 0; i < 10; i++)
+    arr [i] = i * 2;;
+#+end_src
+
+In that code we are defining an integer pointer called ~arr~ to which we are 
+allocating the space necessary to hold 10 integer values. Once we have allocated
+the necessary memory, we can access each of these items using the array notation
+we are all used to.
+
+Notice that all these functions that allocate memory, they will return ~NULL~ in
+case our program runs into an error when allocating memory, i.e. no memory
+available. So it's a good practise to always check if an allocated variable is
+~NULL~ or not before we start using it:
+
+#+begin_src C
+  int *arr = malloc (sizeof (int) * 10);
+  if (!arr)
+    exit (EXIT_FAILURE);
+
+  for (int i = 0; i < 10; i++)
+    arr [i] = i * 2;
+#+end_src
+
+That's much more safer!
+
+However, as explained with the differences of the stack[fn:5] and the heap[fn:6],
+the memory allocated on the heap is not freed automatically after is not being
+used, now it is the responsibility of the programmer to track and to free
+allocated memory whenever it's necessary. To do so, we can use the ~free~ function
+(provided by the ~stdlib.h~ header as well) to free any unnecessary memory:
+
+#+begin_src C
+  free (arr);
+#+end_src
+
+If we do not free the memory that we have allocated it can lead to memory
+leaks[fn:7].
+
+The function ~calloc~ also allocates memory as ~malloc~ does, but there are two
+differences between these functions:
+- ~calloc~ takes two arguments: the number of elements we want to allocate and the
+  size of each individual element.
+- ~calloc~ initialises the allocated memory to zeroes.
+
+Following the previous example, if we wanted to create an array of 10 integers
+using ~calloc~ we would do: ~int *arr = calloc (10, sizeof (integer))~. Let's look
+at an example where we access - *explicitly* - uninitialised memory using ~malloc~
+and ~calloc~:
+
+#+begin_src C :results output
+  #include <stdio.h>
+  #include <stdlib.h>
+
+  int
+  main (void)
+  {
+    int *arr = malloc (sizeof (int) * 3);
+    for (int i = 0; i < 3; i++)
+      printf ("arr = %p, *arr = %d\n", arr, *arr);
+    free (arr);
+
+    arr = calloc (3, sizeof (int));
+    for (int i = 0; i < 3; i++)
+      printf ("arr = %p, *arr = %d\n", arr, *arr);
+    free (arr);
+
+    return 0;
+  }
+#+end_src
+
+When we use ~malloc~ without allocating each of its elements, we can have outputs
+like:
+
+#+BEGIN_EXAMPLE
+ arr = 0x55a14e24e2a0, *arr = 94604934820512
+ arr = 0x55a14e24e2a0, *arr = -18360493482051
+ arr = 0x55a14e24e2a0, *arr = 18460493482158
+ arr = 0x55a14e24f2d0, *arr = 0
+ arr = 0x55a14e24f2d0, *arr = 0
+ arr = 0x55a14e24f2d0, *arr = 0
+#+END_EXAMPLE
+
+* We are finished!
+
+Heyy, if you made it this far, congrats!! This was such a long entry Lao, I
+wanted it to be such a short guide to pointers but well, it seems I got a little
+inspired? but well, even if it was this long and we covered all these topics,
+functions, use-cases and possibilities, this was just a grasp of the surface of
+pointers there are still a lot of concepts like double-pointers and a lot of
+other different things, so this was nothing but an introduction to pointers.
+
+I will post more entries about pointers in the future, this will be the first
+post of a /series/ of C entries and I have planned to keep going up in difficulty
+so we might eventually end up talking about multi-threading, IPC or something
+like that hehe.
+
+I really hope you liked this entry \o/
+
+* Footnotes
+
+[fn:7] *Memory Leak:* A memory leak occurs when we dynamically allocate memory on
+the heap, and we lose a pointer that references it to free it (or just when we
+don't free it at all). This means that our program will occupy memory that is
+not needed, and most of the times, not even accessible.
+ 
+[fn:6] *Heap:* Unlike the stack, the heap is a larger and constant type of memory.
+That means that whenever we allocate space on the heap, we will be able to
+access it throughout our entire program, this is the type of memory that is
+created when calling ~malloc~. But as this memory is not automatically freed, you
+need to manually go through each one of the variables located on the heap and
+free them when you don't need them anymore.
+
+[fn:5] *Stack memory:* The stack is a kind of memory that is smaller than the heap
+and is local to a function, so whenever you declare a variable like ~int a~ it
+will be created on the stack and when the function ends, when it returns it will
+be freed, because remember that the stack is a local type of memory.
+
+[fn:4] *Pass by reference:* When passing a variable to a function in C we are
+passing a copy of the value that it has instead of the variable. That's why we
+cannot modify its value, that's called /pass by value/. When we do passing by
+reference, instead of passing the value of a variable to a function, we are
+passing a reference to it, so we can access and modify its value.
+
+[fn:3] *Pointer arithmetic:* The ability to perform arithmetic operations on
+memory addresses rather than numbers.
+
+[fn:2] *Dereference:* Obtain the value that a pointer is pointing to. 
+
+[fn:1] *Indirection:* In programming, indirection is the ability to reference
+something using a name, reference or container, instead of the value itself.
+
+# Local Variables:
+# writefreely-post-id: "g8ncumcxi3"
+# writefreely-post-token: nil
+# End:

@@ -1,0 +1,10 @@
+#+LAST_MODIFIED: 2023-12-15 Fri 21:58:01
+
+Heyy, here are all the entries of my blog [[https://lyxincyberia.org][LyxInCyberia]]. I write them using
+org-mode and I upload them there using /writefreely-el/.
+
+The entries are organised in folders by year > month and the day in the name
+of the org-file.
+
+Every single character of this repository, is licensed under CC-BY-SA. I accept
+push requests in case you want to improve or change something.
