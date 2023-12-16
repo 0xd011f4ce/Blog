@@ -1,6 +1,6 @@
 #+TITLE: Using Pointers in C
 #+DATE: 2023-12-15 Fri 19:52:00
-#+LAST_MODIFIED: 2023-12-15 Fri 21:54:30
+#+LAST_MODIFIED: 2023-12-15 Fri 22:36:24
 
 * Pointers in C
 
@@ -662,6 +662,8 @@ so we might eventually end up talking about multi-threading, IPC or something
 like that hehe.
 
 I really hope you liked this entry \o/
+
+*Note:* You can find the source to this entry [[https://github.com/0xd011f4ce/Blog/blob/main/2023/12/15-C-pointers.org][here]].
 
 * Footnotes
 
