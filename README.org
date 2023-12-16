@@ -1,4 +1,7 @@
-#+LAST_MODIFIED: 2023-12-15 Fri 21:58:01
+#+DATE: 2023-12-15 Fri 22:00:33
+#+LAST_MODIFIED: 2023-12-15 Fri 22:00:41
+
+* Blog
 
 Heyy, here are all the entries of my blog [[https://lyxincyberia.org][LyxInCyberia]]. I write them using
 org-mode and I upload them there using /writefreely-el/.
