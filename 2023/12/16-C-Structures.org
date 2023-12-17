@@ -1,0 +1,531 @@
+#+TITLE: Structures in C
+#+DATE: 2023-12-16T19:42:23-05:00
+#+CATEGORIES[]: C Programming
+#+LAST_MODIFIED: 2023-12-16 Sat 20:43:31
+
+An introduction to using structures in C.
+
+<!--more-->
+
+* Structures
+C allows us to /create/ our own datatype and we can do this by using the ~struct~
+keyword. Structs are very similar to arrays as we can use them to pack and
+contain data, but the difference between the both, is that we can store
+different datatypes inside of the same structure.
+
+The syntax that we have to follow to declare a struct is the following:
+
+#+begin_src C
+  struct struct_name
+  {
+    /* contents of the struct here */
+  };
+#+end_src
+
+As you can see, we use the ~struct~ keyword followed by the name of the structure
+that we are creating, then open a block of code and inside of it we define the
+members[fn:1] of it.
+
+To define the members[fn:1] of a structure, we just define them as if we were
+creating normal variables. For example, if we wanted to declare a structure that
+represents a date (containing a /day/, /month/ and /year/), we could create a
+structure like this:
+
+#+begin_src C
+  struct date
+  {
+    int day;
+    int month;
+    int year;
+  };
+#+end_src
+
+If we wanted to represent that date, we would need to declare three different
+variables (one for each of the members[fn:1] of the structure):
+
+#+begin_src C
+  /* using variables */
+  int day = 16;
+  int month = 12;
+  int year = 2023;
+#+end_src
+
+Once we created our own ~struct~ we can create instances of it using
+~struct <struct_name>~ as their types, in our case it would be ~struct date~:
+
+#+begin_src C
+  struct date today = { 0 };
+#+end_src
+
+As you can see the initialisation is the same as if we were initialising an
+array, in this case we are setting all its members[fn:1] to 0.
+
+The size of our ~today~ variable is the sum of the sizes of the members[fn:1] of
+the structure, in this case, if we suppose that the size of an int is 4 bytes,
+if we did ~sizeof (today)~ it would return 12.
+
+If we wanted to access a member[fn:1] of our structure ~today~ we use the /member/
+/selection/ operator (~.~), like this:
+
+#+begin_src C
+  today.day = 16;
+  today.month = 12;
+  today.year = 2023;
+#+end_src
+
+In that snippet of code we are setting the fields ~day~, ~month~ and ~year~ of the
+~today~ variable to the values representing today's date. As we can access each of
+the members[fn:1] of the ~date~ structure using the /member of/ operator, we can use
+it in expressions, to do comparisons and basically, we can treat as if it were a
+normal variable (because it is), some examples:
+
+#+begin_src C
+  int century = today.year / 100;
+
+  if (today.year == 2024)
+    printf ("Goshh, the year passed so fast :c\n");
+#+end_src
+
+** Declaring a structure
+
+There are several ways in which we can declare a structure in C. We can declare
+it as we did in the previous example:
+
+#+begin_src C
+  struct date
+  {
+    int day;
+    int month;
+    int year;
+  };
+#+end_src
+
+In this way of initialising the structure we use the ~struct~ keyword, followed by
+the name of the structure and finally its members[fn:1].
+
+We can also create a structure and immediately declare variables of its type, we
+do this just by adding the name(s) of the variable(s) after the closing brace ~}~:
+
+#+begin_src C
+  struct date
+  {
+    /* contents of date */
+  } yesterday, today, tomorrow;
+#+end_src
+
+And now we have 4 new things in our program: a structure ~date~, and three
+instances of it called ~yesterday~, ~today~ and ~tomorrow~.
+
+The other way in which we can define a structure, is what I call /anonymous/
+structures. These type of functions are defined only to declare a variable,
+let's look at it in code first so it's easier to understand:
+
+#+begin_src C
+  struct {
+    int day;
+    int month;
+    int year;
+  } today;
+#+end_src
+
+In this case, we are declaring a variable called ~today~ which is a structure that
+contains three members[fn:1]: ~day~, ~month~ and ~year~. Even if we have a variable of
+this type, we do not have a structure as there is no way we can reference it,
+that means that we cannot create more instances of it, the only one of its kind
+is ~today~.
+
+** Initialising structures
+
+As mentioned before, the way we initialise a structure is pretty similar to the
+one we use to initialise an array, if we wanted to define our ~date~ structure, we
+could also do it this way:
+
+#+begin_src C
+  struct date today = { 16, 12, 2023 };
+#+end_src
+
+We are defining a ~struct date~ variable called ~today~ and its day is 16, its month
+is 12 and its year is 2023. This is very useful, because otherwise we'd need to
+write three lines just to initialise each of the members[fn:1] of it.
+
+There's a caveat to this, and it's that we need to initialise the elements in
+order, if we did ~{ 12, 16, 2023 }~ that makes the day 12, the month 16 and the
+year 2023. There's another way in which we can initialise a struct, and it's to
+specify the names of its members[fn:1] like this:
+
+#+begin_src C
+  struct date today = { .day = 16, .month = 12, .year = 2023 };
+#+end_src
+
+And that is the same as of the previous initialisation, but this time we don't
+need to worry about the order of the members[fn:1] of the structure ~date~, so we
+can do this:
+
+#+begin_src C
+  struct date today = { .month = 12, .day = 16, .year = 2023 };
+#+end_src
+
+Even if we changed the order of the elements we are initialising, we are 
+explicitly stating which one we are initialising, so we can do it in the order
+we want.
+
+There's also another way we can assign values to a structure, and that is by
+using /compound literals/:
+
+#+begin_src C
+  today = (struct date){ 16, 12, 2023 };
+#+end_src
+
+We can use that to set some values to all (or some) of the members[fn:1] of the
+structure after we initialised it.
+
+*Challenge:* I want you to write a structure that represents your address (or you
+can generate one using online tools) and print it nicely. This is how the output
+should look:
+
+#+begin_example
+4955 Old Dear Lane
+Poughkeepsie, NY 12601
+#+end_example
+
+It has the address, the City, the state and the ZIP code. (*tip:* you can use 
+character arrays/pointers - basically strings - as members[fn:1] of a structure)
+
+The solution to this challenge is in the footnotes[fn:2]
+
+** Structure arrays
+
+As with all the types of variables we can have, we can declare arrays for 
+structure variables. Let's suppose we want to store the date of all the days of
+the month. Instead of creating 30 variables (as it's the average days in a
+month) we can just create one array of ~struct date~:
+
+#+begin_src C
+  struct date days[30] = { 0 };
+#+end_src
+
+And they work exactly the same as normal structures once we get them using their
+index, so we can do:
+
+#+begin_src C
+  days[0] = (struct date){ 1, 12, 2023 };
+#+end_src
+
+We are initialising the first element of the ~days~ array with the date of
+December 1st of 2023. If we wanted to initialise all (or some elements) of the
+~days~ array, we can do it as if we were initialising a multidimensional array:
+
+#+begin_src C
+  struct date important_dates[2] = {
+    { 9, 5, 2005 },
+    { 1, 1, 1970 }                /* the beginning of time hehe */
+  };
+#+end_src
+
+And we are initialising both elements of ~important dates~ (the first one is my
+birthday btw hehe). And naturally, we can initialise structures in the three
+ways that we saw before:
+
+#+begin_src C
+  struct date random_dates[10] = {
+    { 9, 5, 2005 },
+    { .day = 1, .month = 1, .year = 1977 },
+    [5] = { 5, 1, 1969 }
+  };
+#+end_src
+
+*Note:* Notice how we can specify which index we want to initialise using ~[i] = x~.
+
+** Nested structures
+
+We can also have structures inside of structures. Following the examples that 
+we've had so far, let's create a structure called ~datetime~ that now contains a
+date but also contains a time:
+
+#+begin_src C
+  struct time
+  {
+    int hour;
+    int minute;
+    int second;
+  };
+
+  struct date
+  {
+    int day;
+    int month;
+    int year;
+  };
+
+  struct datetime
+  {
+    struct date;
+    struct time;
+  };
+#+end_src
+
+And we can access each of these nested structures just as if they were normal
+members[fn:1] by using the /member of/ operator like this:
+
+#+begin_src C
+  struct datetime datetime = { 0 };
+  datetime.date.day = 16;
+  datetime.time.hour = 19;
+#+end_src
+
+And again, we can initialise the structures in the same three ways as if they
+were multidimensional arrays:
+
+#+begin_src C
+  /* the same with the other three ways, but I'm so lazy to do it all again */
+  struct datetime datetime = {
+    { 16, 12, 2023 },
+    { 19, 49, 00 }
+  };
+#+end_src
+
+** Structures and Pointers
+
+Regarding [[https://lyxincyberia.org/programming/using-pointers-in-c-98nz][pointers]] and structures, we can have both pointers to structures and
+pointers as members[fn:1] of a structure.
+
+*** Structure pointers
+
+We can declare structure pointers, again, as we would do with any other
+datatype. For example:
+
+#+begin_src C
+  struct date *pdate = &today_date;
+#+end_src
+
+Now ~pdate~ is a pointer that points to the ~today_date~ variable.
+
+Why would we want to have pointers to a structure? There are several reasons, 
+but the one that I consider the most important is: as we know, C uses /pass by/
+/value/ when passing arguments to a function, that means that whenever we pass a
+variable to a function, we are copying its value to the local variable 
+represented by the argument, and the same happens with structures.
+
+If we have a large structure and we pass it normally (without pointers) it would
+have to copy all of its members[fn:1] to the structure local to the function
+represented by the argument. However, when we pass a pointer to a structure as
+an argument to a function, C still will /pass by value/ but this time it will only
+need to pass an address instead of the whole structure.
+
+When we have a pointer to a structure, as with all pointers, to access its 
+contents we need to dereference it first, we can do that like this:
+
+#+begin_src C
+  (*pdate).day = 16;
+#+end_src
+
+Notice how we are enclosing the dereference of the ~pdate~ variable inside of
+parentheses, and we do that, because the /member of/ operator (~.~) has a higher
+precedence[fn:3] than the /dereference/ operator (~*~) so we need to enclose it in
+parentheses (as everything inside of parentheses will be evaluated first, 
+regardless of precedence[fn:3].)
+
+Dereferencing a structure whenever we want to access one of its members[fn:1]
+can get painful sometimes as its syntax is kind of confusing (and a lot of 
+factors are taking into account, such as the one of precedence[fn:3]). That's
+why we have a shorthand in C which is the /member of through a pointer/ ~->~ which
+is the same of dereferencing and then accessing a member, so the following two
+statements are equivalent:
+
+#+begin_src C
+  (*pdate).day = 16;
+  pdate->day = 16;
+#+end_src
+
+As evident, using the /member of through a pointer/ operator (~->~) is much easier,
+simpler and faster than doing the first way. And when we use that operator (~->~)
+we treat it the same way as the usual /member of/ ~.~
+
+*** A pointer as a member
+
+A structure can also have pointers as members[fn:1]:
+
+#+begin_src C
+  struct spointers
+  {
+    int *p1, *p2;
+  };
+#+end_src
+
+In the ~spointers~ struct, we can access its members[fn:1] ~p1~ and ~p2~ normally with
+the /member of/ operator (~.~) instead of using ~->~ as ~spointers~ is not a pointer but
+its children are.
+
+And we can also use character arrays or character pointers as elements of a 
+structure:
+
+#+begin_src C
+  struct names
+  {
+    char first[32];
+    char last[32];
+  };
+
+  struct pnames
+  {
+    char *first;
+    char *last;
+  };
+#+end_src
+
+Both of those structures are perfectly valid as we can do:
+
+#+begin_src C
+  struct names names = { "John", "Doe" };
+  struct pnames pnames = { "Lain", "Iwakura" };
+#+end_src
+
+But even if we can /treat them/ the same, there are some differences:
+- The sizes of the structures are different. As we used two character arrays of
+  32 items, that means that the size of ~names~ is 64 bytes, whereas the size of
+  ~pnames~ is just the size two pointers occupy in memory, in most 64-bit
+  operating systems, that will be just 16 bytes.
+- The strings in ~names~ are contained inside of the structure, so passing by
+  value will be much slower than doing it with ~pnames~ as the strings are not
+  stored in the structure, we just have a pointer to the position in memory
+  where they are actually located (in the previous example, that'd be just the
+  place where the compiler stores strings.)
+
+For reasons like that I'd advise you to use pointers instead of arrays whenever
+possible for the elements of a structure (as you can also change their size by
+dynamically allocating and reallocating memory). Also, when you have a large
+structure that you need to pass to a function, do it with a pointer, so it's
+faster and more efficient in terms of memory (unless the structure is smaller
+than holding the pointers, like in this example[fn:4])
+
+** Returning structures from a function
+
+Another way to prove that we can treat structures like any normal datatype 
+provided by the C programming language, is that we can return structures from
+functions. We can do this just by specifying the type of the function as the one
+of a structure that we have defined, and of course, returning a structure of
+this type:
+
+#+begin_src C
+  struct datetime
+  get_datetime (void)
+  {
+    return (struct datetime){ 0 };
+  }
+#+end_src
+
+We can also return pointers from a function, just by adding the pointer ~*~
+operator after the structure name (just as we define a structure pointer.) But
+remember that when you return a pointer from a function, you need to allocate 
+memory on the heap[fn:5]. If you do this, the program won't work:
+
+#+begin_src C
+  struct date *
+  pget_date (void)
+  {
+    struct date date = { 16, 12, 2023 };
+    return &date;
+  }
+#+end_src
+
+It won't work because we are returning the address of a variable that was 
+allocated on the stack, so when we try to reference it outside of the ~pget_date~
+function, that space in memory won't exist anymore as the stack is temporary and
+local to a scope.
+
+* We are finished!
+
+I think this is the way I will end all my entries hashahs it's so funny to say
+something like this at the end of an entry \o/. Again, this was huge hashas. I
+really want to post a lot of stuff of C, I even thought of trying to style this
+website as if it were a book and call it something like *The C Grimoire* or
+something nerdy like that hehehe, in the following days I might rename this blog
+to that and actually do that. I have a lot of ideas on what to write so, expect
+(what I think is) a lot of cool content in the following days/weeks.
+
+Alsoo, I will try upload daily as possible (this might become once every two
+days or something like that in the future - maybe now? hehe). As always, you can
+find the source of this entry [[https://github.com/0xd011f4ce/Blog/blob/main/2023/12/16-C-Structures.org][here]] (in that repository there's the license of
+the entries and they are a little more organised I would say? so go check it
+\o/)
+
+* Footnotes
+[fn:5] *Heap:* A space in memory that the programmer can manually manage. For more
+information on this, check [[https://lyxincyberia.org/programming/using-pointers-in-c-98nz][this entry]].
+
+[fn:4] A little example showing a structure that has pointers and one that has
+normal elements, but is smaller than the pointer structure:
+
+#+begin_src C
+  struct small
+  {
+    int a, b;
+  };
+
+  struct big
+  {
+    int *a, *b;
+  };
+#+end_src
+
+In that example, ~sizeof (struct small) = 8~ and ~sizeof (struct big) = 16~
+
+
+[fn:3] *Precedence:* Precedence are some rules that the compiler follows to 
+process expressions. When we say that certain operator has a higher precedence
+it means that it will be evaluated first (you can see a table with the
+precedence of all the operators in C [[https://en.cppreference.com/w/c/language/operator_precedence][here]]).
+
+Let's look at a short and simple example. As we can see in that table the 
+multiplication operator ~*~ has a higher precedence than the one of the addition
+~+~, so we if we did: ~2 + 5 * 2~ based on the precedence table, as ~*~ has a higher
+precedence ~5 * 2~ will be evaluated first, and then ~2~ will be added to it. So
+the result of doing ~2 + 5 * 2~ is 12, instead of 14.
+
+[fn:2] *Challenge 1:* Here's the solution of the first challenge (at least my 
+approach to it):
+
+#+begin_src C :results output
+  #include <stdio.h>
+
+  struct address
+  {
+    char *address;
+    char *city;
+    char *state;
+    int zip;
+  };
+
+  int
+  main (void)
+  {
+    struct address kevin_address = {
+      .address = "4955 Old Dear Lane",
+      .city = "Poughkeepsie",
+      .state = "NY",
+      .zip = 12601
+    };
+
+    printf ("%s\n%s, %s %d\n", kevin_address.address,
+            kevin_address.city,
+            kevin_address.state,
+            kevin_address.zip);
+    return 0;
+  }
+#+end_src
+
+This is the output:
+
+#+begin_example
+4955 Old Dear Lane
+Poughkeepsie, NY 12601
+#+end_example
+
+
+[fn:1] *Member:* A member is an element contained in a structure (these are also 
+called /fields./)
+
+# Local Variables:
+# writefreely-post-id: "zfcd2idvj7"
+# writefreely-post-token: nil
+# End:
