@@ -1,0 +1,494 @@
+#+TITLE: Files in C
+#+DATE: 2023-12-17T20:31:02-05:00
+#+CATEGORIES[]: C Programming
+#+LAST_MODIFIED: 2023-12-17 Sun 21:26:09
+
+A little introduction to using and managing files in the C programming language.
+
+<!--more-->
+* About Files
+
+Files are very useful as they allow us to keep persistent data. Whenever we
+declare a variable, enough space in memory to hold its value is allocated in
+either the stack or the heap. But as soon as the program execution finishes that
+data is vanished as RAM is temporary, unlike files which will remain even if we
+shutdown the device the program was executed on.
+
+We can think of a file as a series of bytes, just as we do with strings. If we
+have a file called "file.txt" for example, and its content is "Hello, World!",
+then the file size is the amount of characters multiplied by ~sizeof (char)~.
+
+In a file (at least when we use them in C) there are three important pointers:
+The /beginning of file/ pointer, the /end of file/ pointer and the /current position/
+pointer. We could represent a file like this:
+
+#+begin_example
+  +--------+--------+--------+--------+-------+---------+
+  | byte 0 | byte 1 | byte 2 | byte 3 |  ...  |         |
+  +---+----+--------+--------+--------+-------+-----+---+
+      |                      |                      |
+      |                      |                      |
+  Beginning of          Current Position        End of File
+     File                 = Beginning + 3
+#+end_example
+
+There we have all the bytes of the file, and we have the three pointers I
+mentioned before. The /beginning of file/ pointer represents the space in
+memory[fn:1] where the file starts, the /end of file/ is a pointer to the space in
+memory where the file ends, and finally, the /current position/ is a pointer to
+the position of the file where we are currently performing an operation[fn:2],
+and this pointer is calculated like this: ~Current Position = Beginning + n~, ~n~
+representing the number of operations[fn:2] we have performed. For example,
+let's suppose we open a file /file.txt/ and our position is at the /beginning of/
+/the file/, there we add three characters so now our current position was moved by
+three bytes, so if the beginning of file is ~0x00~ our current position will now
+be ~0x03~.
+
+There are two types of files: /text files/ and /binary files/, for the sake of
+simplicity in this entry we will only cover text files. A binary file is a type
+of content that is not represented by characters (as a /text file/ does) but with
+bytes instead, this is for example an image, an audio file and things like that.
+
+* Files in C
+
+By default, C opens three streams[fn:3] whenever we start a program: the
+/standard input/, the /standard output/ and the /standard error/. We use the
+/standard input/ stream when we call functions like ~getchar~ or ~scanf~, and the
+/standard output/ when we call functions like ~printf~ or ~putchar~.
+
+A program in C references a file through a pointer of type ~FILE~ (defined in
+~stdio.h~) and it stores information about the file, like the three pointers
+mentioned before and the operation[fn:2] that we will perform with this file.
+
+To open a file in C we use the ~fopen~ function, this function takes two
+arguments: the name (destination) of the file that we want to open and the
+operation[fn:2] that we will perform with the file. This is its declaration:
+
+#+begin_src C
+  FILE *fopen (const char *filename, const char *mode);
+#+end_src
+
+If the file was opened successfully it will return a ~FILE~ pointer, and if it ran
+into any issue, it will return ~NULL~ (so it's a good practise to check for ~NULL~
+after opening a file). Notice that there's a maximum amount of files that we can
+have opened at the same type, it is defined in the constant ~FOPEN_MAX~. This is
+how we would open a file called "file.txt" for write purposes:
+
+#+begin_src C
+  FILE *file = fopen ("file.txt", "w");
+  if (!file)
+    puts ("There's been an error trying to open the specified file.\n");
+#+end_src
+
+Now we have a variable called ~file~ which we can now use to manage a file called
+/file.txt/. Notice that we can *ONLY* write in that file, we cannot read, if we
+wanted to read and write at the same time, we could use either the ~r+~ or ~w+~
+mode.
+
+It's also important to note that when we use the ~w~ mode the file will be
+truncated to zero, and all of its contents will be overwritten. If we wanted to
+just append data to the end of the file, we need to use the ~a~ mode. The append
+mode will allow us to add content to the end of a file but we cannot update the
+existing content.
+
+If we wanted to read from a file, we'd use the ~r~ mode:
+
+#+begin_src C
+  FILE *fp = fopen ("file.txt", "r");
+#+end_src
+
+When we open a file in either the /write/ or /read/ mode, the position will be at
+the beginning. And when we want to either read or append, the file must exist
+beforehand or it will return ~NULL~.
+
+When we are finished working with a file, we need to close it, to do that we use
+the ~fclose~ function, this function only takes an argument which is of type ~FILE~
+pointer and it will return 0 if the file was closed, or ~EOF~ if there was an
+error:
+
+#+begin_src C
+  fclose (fp);
+  fp = NULL;          /* it's also good practise to set file pointers to NULL */
+#+end_src
+
+It is important to close files, because remember we can only have a maximum
+amount of files opened at the same time.
+
+** Managing files
+
+In C we can do more stuff with files, other than just reading or writing to it.
+One of the things that we can do is to rename an existing file, to do that we
+can use the ~rename~ function, this function takes two arguments: the /old/ and /new/
+name. This function will return 0 if the rename was successful, or a non-zero 
+value otherwise:
+
+#+begin_src C
+  if (rename ("my_file.txt", "file.txt") != 0)
+    printf ("File couldn't be renamed.\n");
+
+  printf ("Rename successful.\n");
+#+end_src
+
+We can also delete a file by calling the ~remove~ function. This function only
+takes one argument and it's the name of the file:
+
+#+begin_src C
+  remove ("file.txt");
+#+end_src
+
+Notice that these functions take the name of the files instead of a ~FILE~ pointer
+as we cannot have /that/ file opened when we want to either rename or remove it.
+If you have the file opened, it won't work and you'll need to close it first.
+
+** Reading from files
+
+We can read single characters from an opened file using the ~fgetc~ function. This
+function returns the character at the current position as an ~int~ and takes a
+~FILE~ pointer as an argument:
+
+#+begin_src C
+  int c = fgetc (file);                           /* reads a character */
+#+end_src
+
+If it returns ~EOF~ it means that we reached the end of the file. Notice that
+reading characters will increase the current position pointer by 1, if we needed
+to, for example, go back to the beginning of the file using the ~rewing~ function.
+This function only takes as a parameter a ~FILE~ pointer:
+
+#+begin_src C
+  rewind (file);
+#+end_src
+
+*Challenge 1*: Write a program that opens a file and reads all of its characters.
+To do this you'll have to open a file in read mode, and then read each one of
+its characters until it reads ~EOF~, if that happens it means we reached the end
+of the program and now we can close the file and terminate the program.
+My solution is in the footnotes[fn:4].
+
+We can also use the ~fgets~ function which, unlike ~fgetc~, this one reads strings
+from files (or streams). This function takes three arguments: the destination
+string, the number of characters we want to read and a ~FILE~ pointer, this is how
+its declaration looks like:
+
+#+begin_src C
+  char *fgets (char *str, int n, FILE *stream);
+#+end_src
+
+This function will read until one of two conditions are met: it reaches a
+newline character (~\n~) or it reads ~n-1~ characters. If it reads a newline this
+new line will be in the ~str~ string. This function will return the address of ~str~
+if successful, and ~NULL~ if it failed.
+
+Another thing that we can do, is that we can read formatted input from a file
+using ~fscanf~. This function works the same as ~scanf~ (as most of the standard I/O
+functions have a stream equivalent) the only difference is that the first
+argument is a ~FILE~ pointer and then everything is the same. This is its 
+declaration:
+
+#+begin_src C
+  int fscanf (FILE *stream, const char *fmt, ...);
+#+end_src
+
+As you can see it returns an ~int~, and its value is the total of read items.
+
+*Challenge 2:* Write a program that counts the number of lines in a file and
+prints them to the screen. We can do this as we did before, just opening a file,
+reading character by character, and incrementing a counter value by 1 when the 
+read character is a newline. Again, my solution is in the footnotes[fn:5].
+
+** Writing to Files
+
+As with reading, we can also write a single character to a file using the ~fputc~
+function. This function takes two arguments: an integer that represents the 
+character we want to write, and a ~FILE~ pointer. This function will return the
+specified character is it was successful, or ~EOF~ if it failed to write the 
+character.
+
+For example:
+
+#+begin_src C
+  fputc (33, fp);
+#+end_src
+
+If we want to avoid going to the ASCII table to figure out which character we 
+want to write, we can use the atol function like this:
+
+#+begin_src C
+  fputc ((int)atol ('A'), fp);
+#+end_src
+
+We can use ~fputs~ to write a string to a file. This function takes two arguments:
+the string we want to write, and a ~FILE~ pointer. This function will write to the
+file until a null terminator (~\0~) is found, notice that it won't add it to the
+file, so we need to add the null terminator manually if necessary.
+
+As mentioned before a lot of functions of the standard I/O set are available to
+do with custom streams, another example of this is the ~fprintf~ function, which
+works in the same way as ~printf~ but we can specify a stream to write the
+formatted string to. The first argument is a stream, the second one is the
+format, and the other ones are the amount of elements we specified.
+
+*Challenge 3:* For this challenge, you will convert all the characters in a file
+to uppercase, write the results in a temporary file and then rename this
+temporary file to the original filename. So yeah, you would open two files, the
+new one and the temporary one, you will read from the original and write to the
+temporary and making the character uppercase if necessary (you can check the
+~islower~), close both files, remove the original and rename the temporary one.
+One more time, my solution is in the footnotes[fn:6]
+
+** Managing the current position
+
+Knowing our position in a file is very important, it can be useful to knowing
+the amount of bytes a file is, to dynamically allocate memory for a string to
+hold it, for example.
+
+There are two operations regarding position: we can /get/ our position, or we can
+/set/ our position.
+
+*** Getting our position
+
+We have two functions to get our position: ~ftell~ and ~fgetpos~ (for the sake of
+simplicity, we will only worry about ~ftell~ for now).
+
+The ~ftell~ function returns a ~long~ and only has an argument, which is a ~FILE~
+pointer. If we do a call like:
+
+#+begin_src C
+  long pos = ftell (file);
+#+end_src
+
+The ~post~ variable now holds the current position in a file. Remember that the
+current position is just an offset - in bytes - from the beginning of the file.
+
+As the ~fgetpos~ is a little more complicated function, I might cover it in a 
+later entry.
+
+*** Setting our position
+
+To set our position, we can use the ~fseek~ function. This function takes three
+arguments: a ~FILE~ pointer, an offset from the third parameter that's called 
+origin, and the origin. The origin can have three values:
+- *SEEK_SET:* If we set this as the value of origin, it will move us to the
+  beginning of the file + /offset/ bytes (offset is the second argument)
+- *SEEK_CUR:* This represents our current position in the file, it is specially
+  useful when we want to /offset/ it. As for the offset we can use positive and
+  negative values to move forwards and backwards /respectively/ in a file.
+- *SEEK_END:* This represents the end of the file + /offset/ bytes (here you want
+  to only have negative offsets)
+
+Let's look at it in a program:
+
+#+begin_src C
+  #include <stdio.h>
+  #include <stdlib.h>
+
+  int
+  main (void)
+  {
+    FILE *fp = NULL;
+    fp = fopen ("file.txt", "w");
+    if (!fp)
+      {
+        fprintf (stderr, "There's been an error opening the file.\n");
+        return EXIT_FAILURE;
+      }
+
+    fputs ("This is Melany", fp);
+    fseek (fp, 10, SEEK_SET);
+    fputs ("Helouda", fp);
+    fclose (fp);
+
+    return EXIT_SUCCESS;
+  }
+#+end_src
+
+What this program does is that opens a file for writing called /file.txt/. In this
+file we will write "This is Melany", this write operation will move our current
+position by the amount of characters in that string, then we do an ~fseek~ which
+will move us to the beginning of the file + 10, and the text that is in that
+position will be overwritten by the text /Helouda/ (notice that this overwrites
+overlapping text only). This would be the contents of the resulting file:
+
+#+begin_example
+This is MeHelouda
+#+end_example
+
+*Challenge 3:* Let's do a final challenge. For this program, you will open a file
+and you will read its contents in reverse order. To do this, you can open the
+file for reading, go to the end of the file and do an ~ftell~ to get the amount of
+characters in the file. And then you can start printing the characters in the
+current position by offsetting /-current_position/ for example. The solution is in
+the footnotes[fn:7]
+
+* We are finished!
+
+Heyy, that's it! This entry was a little shorter than the other two I've
+written, but well, for now I think that's enough to know about files, I might 
+revisit this topic (and all the other ones I've written before, like the 
+structures and pointers) so I can add more advanced concepts and things like
+that. 
+
+It will be necessary when we - eventually - get to data structures, algorithms,
+multi-threading, sockets, and well, stuff like that.
+
+So yeah, stay tuned to know when we get into the interesting stuff, for now, we
+are just starting. I would love so much to have like the biggest resource to
+learn C in the internet, I know that's quite ambitious but well, I will
+eventually get to it, I know hehhee.
+
+I also just added the [[https://lyxincyberia.org/programming/c-cheatsheet][C Cheatsheet]], take a look at it, bookmark it or something,
+I think it is really useful :3
+
+Thank you so much for reading, ilysm <3>
+
+* Footnotes
+
+[fn:7] *Challenge 4:*
+#+begin_src C
+  #include <stdio.h>
+  #include <stdlib.h>
+
+  int
+  main (void)
+  {
+    FILE *fp = fopen ("file.txt", "r");
+    if (!fp)
+      {
+        fprintf (stderr, "There's been an error opening the file.\n");
+        return EXIT_FAILURE;
+      }
+
+    fseek (fp, 0, SEEK_END);
+    long len = ftell (fp);
+
+    int count = 0;
+    while (count < len)
+      {
+        count++;
+        fseek (fp, -count, SEEK_END);
+        printf ("%c", fgetc (fp));
+      }
+
+    fclose (fp);
+    fp = NULL;
+  
+    return EXIT_SUCCESS;
+  }
+#+end_src
+
+[fn:6] *Challenge 3:*
+
+#+begin_src C
+  #include <stdio.h>
+  #include <stdlib.h>
+  #include <ctype.h>
+
+  int
+  main (void)
+  {
+    FILE *original = NULL, *new = NULL;
+    original = fopen ("original.txt", "r");
+    new = fopen ("uppercase.txt", "w");
+
+    if (!original || !new)
+      {
+        fprintf (stderr, "Any of the files couldn't be opened");
+        return EXIT_FAILURE;
+      }
+
+    int c = 0;
+    while ((c = fgetc (original)) != EOF)
+      {
+        if (islower (c))
+          {
+            c = c - 32;
+          }
+
+        fputc (c, new);
+      }
+
+    fclose (original);
+    original = NULL;
+
+    fclose (new);
+    new = NULL;
+
+    remove ("original.txt");
+    rename ("uppercase.txt", "original.txt");
+
+    return EXIT_SUCCESS;
+  }
+#+end_src
+
+[fn:5] *Challenge 2:*
+#+begin_src C
+  #include <stdio.h>
+  #include <stdlib.h>
+
+  int
+  main (void)
+  {
+    FILE *fp = fopen ("file.txt", "r");
+    if (!fp)
+      {
+        fprintf (stderr, "There's been an error opening the file.\n");
+        return EXIT_FAILURE;
+      }
+
+    int c = 0;
+    int lines = 0;
+
+    while ((c = fgetc (fp)) != EOF)
+      if (c == '\n')
+        lines ++;
+
+    printf ("The total of lines are: %d\n", lines);
+
+    return EXIT_SUCCESS;
+  }
+#+end_src
+
+[fn:4] *Challenge 1:*
+
+#+begin_src C
+  #include <stdio.h>
+  #include <stdlib.h>
+
+  int
+  main (void)
+  {
+    FILE *fp = NULL;
+    int c = 0;
+
+    fp = fopen ("file.txt", "r");
+    if (!fp)
+      {
+        fprintf (stderr, "There's been an error opening the specified file.\n");
+        return EXIT_FAILURE;
+      }
+
+    while ((c = fgetc (fp) != EOF))
+      printf ("%c", c);
+
+    fclose (fp);
+    fp = NULL;
+
+    return EXIT_SUCCESS;
+  }
+#+end_src 
+
+[fn:3] A stream is an abstract representation of any external source or
+destination for data. A keyboard, a command line or a file, are all streams
+for example.
+
+[fn:2] With files we can perform the /write, read/ and /append/ operation, these are
+represented by the letters /w/, /r/ and /a/ (I think you know which one is which).
+
+[fn:1] Whenever we open a file, its contents are moved to memory. That's why it
+might be slow sometimes, as moving data from an HDD (or an SSD)  is much slower
+than moving the same data in RAM.
+
+# Local Variables:
+# writefreely-post-id: "cetb7l0lga"
+# writefreely-post-token: nil
+# End:

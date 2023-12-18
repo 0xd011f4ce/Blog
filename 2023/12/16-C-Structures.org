@@ -1,7 +1,7 @@
 #+TITLE: Structures in C
 #+DATE: 2023-12-16T19:42:23-05:00
 #+CATEGORIES[]: C Programming
-#+LAST_MODIFIED: 2023-12-16 Sat 20:43:31
+#+LAST_MODIFIED: 2023-12-16 Sat 20:47:41
 
 An introduction to using structures in C.
 
