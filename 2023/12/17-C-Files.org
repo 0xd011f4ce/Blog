@@ -1,7 +1,7 @@
 #+TITLE: Files in C
 #+DATE: 2023-12-17T20:31:02-05:00
 #+CATEGORIES[]: C Programming
-#+LAST_MODIFIED: 2023-12-17 Sun 21:26:09
+#+LAST_MODIFIED: 2023-12-18 Mon 19:29:36
 
 A little introduction to using and managing files in the C programming language.
 
@@ -340,6 +340,8 @@ I also just added the [[https://lyxincyberia.org/programming/c-cheatsheet][C Che
 I think it is really useful :3
 
 Thank you so much for reading, ilysm <3>
+
+Notice that you can find the source code for this entry [[https://github.com/0xd011f4ce/Blog/blob/main/2023/12/17-C-Files.org][here]].
 
 * Footnotes
 

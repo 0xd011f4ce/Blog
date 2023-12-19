@@ -1,0 +1,351 @@
+#+title: Storage Classes in C
+#+date: 2023-12-18T18:30:30-05:00
+#+CATEGORIES[]: C Programming
+#+LAST_MODIFIED: 2023-12-18 Mon 19:30:58
+
+A short overview of the 4 available storage classes in the C Programming
+language.
+
+<!--more-->
+
+* Storage Classes
+
+A storage class is used in some programming languages (like C) to give the 
+compiler and the program some extra information on how some function and
+variables behave, as we can use them to define their scope[fn:1],
+visibility[fn:2] and life-time[fn:3].
+
+C has four storage classes:
+- auto
+- register
+- extern
+- static
+
+*Note:* To use a storage class, we add the storage class keyword before the type
+of the variable or function we are declaring, like this:
+~<storate_class> <datatype> <name>~.
+
+Let's take a detailed look to each one of them.
+
+** auto
+
+The ~auto~ storage class is used to declare variables of automatic storage
+duration (unlike the use of ~auto~ in C++, for example). When a variable has the
+auto storage class it means that it will only exist while its block of code is
+active and destroyed when it's exited.
+
+It sounds pretty familiar, right? That's because all the variables that we
+declare in C, implicitly have the ~auto~ keyword, so it won't be really necessary
+to use it (and doing so might case compatibility issues with C++)
+
+It might be useful sometimes, if you are writing a blog or some kind of
+"tutorial" where you want to explicitly specify that the life-time of a variable
+is just the one of its block of code.
+
+Here's an example of an ~auto~ variable:
+
+#+begin_src C
+  auto int a = 20;
+#+end_src
+
+** extern
+
+The ~extern~ keyword, tells the compiler that a variable was defined somewhere
+else from where it's being declared. This is useful if you want to use variables
+defined in other files without needing to include header files.
+
+This is an example on how the ~extern~ storage class was used:
+
+#+begin_src C
+  /* file_1.c */
+  int external_variable = 200;
+
+  /* file_2.c */
+  extern int external_variable;
+
+  int
+  main (void)
+  {
+    printf ("The extern variable is: %d\n", external_variable);
+
+    return 0;
+  }
+#+end_src
+
+In that little snippet we suppose that we have two files: /file_1.c/ and /file_2.c/,
+we also suppose that they are being compiled to object files and then linked
+together.
+
+What we are doing in that little piece of code, is that we are defining a global
+variable called ~external_variable~ inside of a file, which we call /file_1.c/, and
+then we are declaring an ~extern~ variable in /file_2.c/ with the same name, which
+means that the ~external_variable~ is the one declared in the /file_1.c/.
+
+Notice that when we refer to an external variable (like we did in /file_2.c/), we
+*CANNOT* give it an initialisation value, the following code is invalid:
+
+#+begin_src C
+  /* file_1.c */
+  int external_variable = 200;
+
+  /* file_2.c */
+  extern int external_variable = 120;
+#+end_src
+
+Giving it a value when we are declaring it as an external value is not possible,
+and it will raise a compilation error. We can also use ~extern~ in functions.
+
+As with ~auto~ this is the default storage class of functions and global
+variables, so you don't need to specify it when declaring the original
+variable/function (as I haven't been doing it in the previous snippets of code.)
+
+** static
+
+As with the previous storage classes we've seen before, this one can be used in
+both variables and functions, but this one works a little differently.
+
+When the ~static~ storage modifier is applied to local variables, it will tell the
+compiler to keep the variable in existence for the life-time of the program.
+For example, if you declare a variable inside of a function as ~static~ it won't
+be reinitialised whenever the function is called. When ~static~ is used in a
+global variable it means that it will override the ~extern~ default behaviour
+of variables and functions and it will only be visible to the file where they
+are declared.
+
+Let's look at an example:
+
+#+begin_src C
+  /* file_1.c */
+  static int my_variable = 10;
+
+  /* file_2.c */
+  extern int my_variable;
+#+end_src
+
+As we declared the global variable ~my_variable~ to be static, the /file_2.c/ file
+won't be able to access it, so it will yield a linking error.
+
+And when we use it in a local variable, it won't be reinitialised every time
+that the function is called, for example:
+
+#+begin_src C
+  #include <stdio.h>
+
+  int
+  foo ()
+  {
+    static int bar = 0;
+    bar++;
+
+    return bar;
+  }
+
+  int
+  main (void)
+  {
+    printf ("%d %d %d\n", foo (), foo (), foo ());
+
+    return 0;
+  }
+#+end_src
+
+The output of that program will be:
+
+#+begin_example
+3 2 1
+#+end_example
+
+As mentioned before, as ~bar~ is a ~static~ variable it won't be reinitialised 
+every time that the function is called, but only the first one. The difference
+between ~static~ and ~auto~, is that whenever we enter a function - for example -
+and we have an ~auto~ variable, it will be reinitialised every time that we call
+the function, whereas the ~static~ will keep its same space in memory throughout
+the entirety of the program, therefore it will retain its value. Let's look at
+a program with ~auto~ and ~static~ variables:
+
+#+begin_src C :results output
+  #include <stdio.h>
+
+  int
+  foo (void)
+  {
+    static int count = 0;
+    count++;
+
+    return count;
+  }
+
+  int
+  bar (void)
+  {
+    auto int count = 0;
+    count++;
+
+    return count;
+  }
+
+  int
+  main (void)
+  {
+    printf ("static: %d %d %d\n", foo (), foo (), foo ());
+    printf ("auto: %d %d %d\n", bar (), bar (), bar ());
+
+    return 0;
+  }
+#+end_src
+
+And this would be its output:
+
+#+begin_example
+static: 3 2 1
+auto: 1 1 1
+#+end_example
+
+As you can see, the ~static~ variable retained its value and incremented each time
+that the function was called unlike the ~auto~ variable whose value got 
+re-initialised whenever we called the ~bar~ function.
+
+We can use ~static~ whenever we want to store a variable's value between functions
+or when we don't need to set its value each time that the function is called
+(i.e. it will have a value that won't change) as it will make the program more
+efficient (as it won't have to set a value to a variable every time.)
+
+Another difference between ~auto~ and ~static~ variables, is that ~static~ are 
+initialised automatically to a value of zero (unless we specify a different
+value when we initialise the variable). Also, ~static~ values are stored on the
+heap and not on the stack.
+
+As the ~static~ variables will only be initialised the first time that a function
+is called, if we need to overwrite its value we need to do it *explicitly* like
+so:
+
+#+begin_src C
+  void
+  foo (void)
+  {
+    static int a = 100;           /* will be executed the first time we call foo */
+    a = 100;                      /* we force it to assign its value to 100 each call */
+  }
+#+end_src
+
+Whenever we want to declare a static variable, we need to define its
+initialisation value using a constant or an expression, we cannot do something
+like this:
+
+#+begin_src C
+  int
+  foo (void)
+  {
+    return 100;
+  }
+
+  void
+  bar (void)
+  {
+    static int val = foo ();      /* this will fail */
+  }
+#+end_src
+
+And also remember that global variables or functions that are declared as ~static~
+will make their visibility only to the file where they are declared.
+
+Another thing of static variables, is that they cannot be used as structures
+members, as the C compiler allocates memory for all its members continuously all
+its fields should be in the same memory segment. However, we can have an
+instance of a structure being static:
+
+#+begin_src C
+  static struct my_struct = { 0 };
+#+end_src
+
+** register
+
+The ~register~ storage class is used to define variables that should be used in a
+register[fn:4] instead of RAM, making it faster and more efficient than a normal
+variable. It should be used in variables that must be accessed quickly, and also
+specifying this storage class doesn't necessarily means that it will be stored
+in a register no matter what, this storage class is more of a hint to the
+compiler so it's its choice to do it or no (even though a compiler would
+normally put some variables in a register automatically as one of its
+optimisations techniques.)
+
+The ~register~ storage class can be used in local variables and formal parameters,
+and its life-time is the one of its code block. As these variables are stored in
+a register and not in RAM, we won't be able to obtain its address using the /&/
+operator.
+
+#+begin_src C
+  register int x;
+
+  for (x = 1; x < 20; x++)
+    {
+      printf ("%d\n", x);
+    }
+#+end_src
+
+Notice that the ~register~ storage class can only be used in local blocks and not
+in global variables.
+
+* We are finished!
+
+Heyy, this was a quick one, right? The first short entry that I write so far? I
+think that's really good hashsa, as I have already covered quite a bit of stuff
+(in only like 4 entries) I might write more advanced stuff like some control
+flow using jumps, bit manipulation, variadic functions, more advanced things for
+pointers, interprocess communication, threads, sockets and things like that. I
+am soooo excited for the things that I will write here.
+
+I really hope you like the entries that I write, and that they are useful as
+well.
+
+Notice that you can find the source code for this entry [[https://github.com/0xd011f4ce/Blog/blob/main/2023/12/18-C-Storage-Classes.org][here]].
+
+* Footnotes
+
+[fn:4] *Register:* A CPU register, is one of a small set of data holding places
+that are part of the computer processor. A register can hold an instruction, a
+storage address or any kind of data.
+
+[fn:3] *Life-time:* The life-time is the period in which a variable or function
+exists, it can be just for a function, for a few calls or for the entirety of
+the program. A little example:
+
+#+begin_src C
+  void
+  a_function (void)
+  {
+    int my_var = 0;
+    my_var++;
+  }
+#+end_src
+
+In that example, the life-time of the ~my_var~ variable is only for the execution
+of ~a_function~ as when we exit that function, the ~my_var~ variable will destroyed.
+
+[fn:2] *Visibility:* Visibility determines whether a function (or a variable)  is
+visible to files other than the one they were declared in.
+
+[fn:1] *Scope:* The scope of a variable determines where a variable can be 
+referenced, for example, when we define a variable inside of a local function
+(or a block of code in general) the scope of that variable will be only its
+parent block of code, which means, only it can access it. A little example:
+
+#+begin_src C
+  for (int i = 0; i < 10; i++)
+    {
+      /* do something here */
+    }
+
+  int a_variable = i;
+#+end_src
+
+In that little snippet of code we define two variables, one of them is ~i~ and
+the other one is ~a_variable~. The scope of ~i~ is reduced to the content inside of
+the for-loop, whereas the scope of ~a_variable~ is different, as the scope of ~i~
+is smaller, ~a_variable~ can't access it, and trying to compile that program will
+yield an undefined compilation error.
+
+# Local Variables:
+# writefreely-post-id: "xcxl2yt7kg"
+# writefreely-post-token: nil
+# End:
