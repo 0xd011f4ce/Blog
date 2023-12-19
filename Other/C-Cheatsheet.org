@@ -1,6 +1,7 @@
-#+title: C Cheatsheet
+#+TITLE: C Cheatsheet
 #+date: 2023-12-17T19:29:32-05:00
-#+LAST_MODIFIED: 2023-12-17 Sun 20:31:38
+#+categories[]: C Programming
+#+LAST_MODIFIED: 2023-12-18 Mon 20:02:40
 
 A cheat sheet with all the functions that are shown in the C entries. They are
 also organised nicely in categories. This will be organised whenever I post a
@@ -10,15 +11,73 @@ new entry.
 
 * Cheatsheet
 
-** Pointers/Memory
+** Memory Management
 
-Here be dragons...
+| Name    | Located in | Description                   | Declaration                                 |
+|---------+------------+-------------------------------+---------------------------------------------|
+| malloc  | stdlib.h   | Allocates memory dynamically  | void *malloc (size_t size);                 |
+|---------+------------+-------------------------------+---------------------------------------------|
+| calloc  | stdlib.h   | Allocates memory dynamically  | void *calloc (size_t num, size_t size);     |
+|         |            | and initialises it to 0       |                                             |
+|---------+------------+-------------------------------+---------------------------------------------|
+| realloc | stdlib.h   | Reallocates memory and copies | void *realloc (void *ptr, size_t new_size); |
+|         |            | its                           |                                             |
+|         |            | previous                      |                                             |
+|         |            | contents to the               |                                             |
+|         |            | new address                   |                                             |
+|---------+------------+-------------------------------+---------------------------------------------|
+| free    | stdlib.h   | Frees memory that we have     | void free (void *ptr);                      |
+|         |            | allocated on the heap         |                                             |
+|---------+------------+-------------------------------+---------------------------------------------|
 
 ** Files
 
-Here be dragons...
-
-# Local Variables:
-# writefreely-post-id: "x201scjeex"
-# writefreely-post-token: nil
-# End:
+| Name    | Located in | Description        | Declaration                                                |
+|---------+------------+--------------------+------------------------------------------------------------|
+| fopen   | stdio.h    | Opens a file and   | FILE *fopen (const char *fname, const char *mode);         |
+|         |            | returns a pointer  |                                                            |
+|         |            | to it              |                                                            |
+|---------+------------+--------------------+------------------------------------------------------------|
+| fclose  | stdio.h    | Closes a file      | int fclose (FILE *stream);                                 |
+|---------+------------+--------------------+------------------------------------------------------------|
+| rename  | stdio.h    | Renames a file     | int rename (const char *old_fname, const char *new_fname); |
+|         |            | (it must not be    |                                                            |
+|         |            | opened)            |                                                            |
+|---------+------------+--------------------+------------------------------------------------------------|
+| remove  | stdio.h    | Deletes a file     | int remove (const char *fname);                            |
+|         |            | (it must not be    |                                                            |
+|         |            | opened)            |                                                            |
+|---------+------------+--------------------+------------------------------------------------------------|
+| fgetc   | stdio.h    | Reads the next     | int fgetc (FILE *stream);                                  |
+|         |            | character from the |                                                            |
+|         |            | given file         |                                                            |
+|---------+------------+--------------------+------------------------------------------------------------|
+| rewind  | stdio.h    | Moves the          | void rewind (FILE *stream);                                |
+|         |            | position to the    |                                                            |
+|         |            | beginning of the   |                                                            |
+|         |            | file               |                                                            |
+|---------+------------+--------------------+------------------------------------------------------------|
+| fgets   | stdio.h    | Reads a string     | char *fgets (char *str, int count, FILE *stream);          |
+|         |            | from a file until  |                                                            |
+|         |            | it finds a newline |                                                            |
+|         |            | or (count - 1)     |                                                            |
+|---------+------------+--------------------+------------------------------------------------------------|
+| fscanf  | stdio.h    | Reads formatted    | int fscanf (FILE *stream, const char *fmt, ...);           |
+|         |            | input from a file  |                                                            |
+|---------+------------+--------------------+------------------------------------------------------------|
+| fputc   | stdio.h    | Writes a           | int fputc (int ch, FILE *stream);                          |
+|         |            | character to a     |                                                            |
+|         |            | file               |                                                            |
+|---------+------------+--------------------+------------------------------------------------------------|
+| fprintf | stdio.h    | Writes formatted   | int fprintf (FILE *stream, const char *fmt, ...);          |
+|         |            | output to a file   |                                                            |
+|---------+------------+--------------------+------------------------------------------------------------|
+| ftell   | stdio.h    | Returns our        | long ftell (FILE *stream);                                 |
+|         |            | current position   |                                                            |
+|         |            | in a file          |                                                            |
+|---------+------------+--------------------+------------------------------------------------------------|
+| fseek   | stdio.h    | Moves our          | int fseek (FILE *stream, long offset, int origin);         |
+|         |            | position based on  |                                                            |
+|         |            | SEEK_SET,          |                                                            |
+|         |            | SEEK_CUR, SEEK_END |                                                            |
+|---------+------------+--------------------+------------------------------------------------------------|
